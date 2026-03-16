@@ -18,6 +18,8 @@
         .modal-content { max-width: 500px; width: 90%; max-height: 90vh; overflow-y: auto; }
         .case-card { cursor: pointer; transition: all 0.1s; }
         .case-card:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        .loading-spinner { border: 3px solid #f3f3f3; border-top: 3px solid #4f46e5; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; display: inline-block; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body class="bg-gray-50 font-sans antialiased">
@@ -27,12 +29,10 @@
     <aside id="sidebar" class="hidden md:flex md:w-64 bg-indigo-800 text-white p-6 flex-col shadow-xl">
         <h2 class="text-2xl font-bold mb-8"><i class="fas fa-gavel mr-2"></i>LegalCase</h2>
         <nav class="space-y-3 flex-1" id="sidebar-nav">
-            <!-- Common links -->
             <a href="#dashboard" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-indigo-700 transition sidebar-link"><i class="fas fa-tachometer-alt w-6"></i><span>Dashboard</span></a>
             <a href="#cases" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-indigo-700 transition sidebar-link"><i class="fas fa-folder-open w-6"></i><span>All Cases</span></a>
             <a href="#add-case" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-indigo-700 transition sidebar-link"><i class="fas fa-plus-circle w-6"></i><span>Schedule New Case</span></a>
             <a href="#old-cases" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-indigo-700 transition sidebar-link"><i class="fas fa-archive w-6"></i><span>Old / Closed</span></a>
-            <!-- Admin links (hidden initially) -->
             <div id="admin-links" class="hidden">
                 <hr class="border-indigo-600 my-2">
                 <a href="#admin-users" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-indigo-700 transition sidebar-link"><i class="fas fa-users-cog w-6"></i><span>Manage Users</span></a>
@@ -77,7 +77,10 @@
                         <div class="flex justify-between items-center mb-4">
                             <a href="#forgot-password" class="text-sm text-indigo-600 hover:underline">Forgot password?</a>
                         </div>
-                        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition shadow-md">Sign In</button>
+                        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition shadow-md flex items-center justify-center gap-2" id="login-submit">
+                            <span>Sign In</span>
+                            <span class="loading-spinner hidden" id="login-spinner"></span>
+                        </button>
                         <p class="text-center text-gray-600 mt-4">Don't have an account? <a href="#signup" class="text-indigo-600 hover:underline font-medium">Sign up</a></p>
                     </form>
                     <div id="login-error" class="mt-4 text-red-500 text-sm"></div>
@@ -98,7 +101,10 @@
                             <label class="block text-gray-700 text-sm font-semibold mb-2">Password</label>
                             <input type="password" name="password" autocomplete="new-password" class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-300 focus:border-indigo-500 outline-none transition" required>
                         </div>
-                        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition shadow-md">Sign Up</button>
+                        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition shadow-md flex items-center justify-center gap-2" id="signup-submit">
+                            <span>Sign Up</span>
+                            <span class="loading-spinner hidden" id="signup-spinner"></span>
+                        </button>
                         <p class="text-center text-gray-600 mt-4">Already registered? <a href="#login" class="text-indigo-600 hover:underline font-medium">Sign in</a></p>
                     </form>
                     <div id="signup-message" class="mt-4 text-sm text-center"></div>
@@ -125,7 +131,7 @@
 
         <!-- APP PAGES (protected) -->
         <div id="app-pages" class="hidden">
-            <!-- Dashboard (same as before) -->
+            <!-- Dashboard -->
             <div id="dashboard-page" class="page">
                 <h1 class="text-3xl font-bold text-gray-800 mb-2">Dashboard</h1>
                 <p class="text-gray-500 mb-8">Overview of your cases</p>
@@ -149,13 +155,13 @@
                 <div id="recent-old-list" class="grid md:grid-cols-2 gap-4"></div>
             </div>
 
-            <!-- All Cases (user's own) -->
+            <!-- All Cases -->
             <div id="cases-page" class="page">
                 <h1 class="text-3xl font-bold text-gray-800 mb-6">All Cases</h1>
                 <div id="all-cases-list" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
             </div>
 
-            <!-- Add Case (same) -->
+            <!-- Add Case -->
             <div id="add-case-page" class="page max-w-2xl mx-auto">
                 <h1 class="text-3xl font-bold text-gray-800 mb-6">Schedule a new case</h1>
                 <div class="bg-white p-6 rounded-xl shadow-md">
@@ -207,7 +213,7 @@
                 </div>
             </div>
 
-            <!-- Old Cases (user's own) -->
+            <!-- Old Cases -->
             <div id="old-cases-page" class="page">
                 <h1 class="text-3xl font-bold text-gray-800 mb-6">Old / Closed Cases</h1>
                 <div id="old-cases-list" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
@@ -264,7 +270,7 @@
     </nav>
 </div>
 
-<!-- Client details modal (same) -->
+<!-- Client details modal -->
 <div id="clientModal" class="modal">
     <div class="modal-content bg-white rounded-2xl shadow-2xl p-6">
         <div class="flex justify-between items-center mb-4">
@@ -336,9 +342,9 @@
 
         // ==================== STATE ====================
         let currentUser = null;
-        let currentProfile = null; // { role, is_approved }
+        let currentProfile = null;
         let cases = [];
-        let allUsers = []; // admin only
+        let allUsers = [];
 
         // DOM elements
         const authPagesDiv = document.getElementById('auth-pages');
@@ -356,6 +362,12 @@
         const closeModalBtn = document.getElementById('closeModalBtn');
         const cancelEditBtn = document.getElementById('cancelEditBtn');
         const editForm = document.getElementById('edit-client-form');
+
+        // Loading spinners
+        const loginSubmitBtn = document.getElementById('login-submit');
+        const loginSpinner = document.getElementById('login-spinner');
+        const signupSubmitBtn = document.getElementById('signup-submit');
+        const signupSpinner = document.getElementById('signup-spinner');
 
         // ==================== HELPERS ====================
         function showPage(pageId) {
@@ -399,37 +411,63 @@
             });
         }
 
-        // ==================== FETCH PROFILE ====================
-        async function fetchProfile() {
-            if (!currentUser) return null;
-            const { data, error } = await supabaseClient
-                .from('profiles')
-                .select('role, is_approved')
-                .eq('id', currentUser.id)
-                .single();
-            if (error) {
-                console.error('Error fetching profile:', error);
-                return null;
+        // ==================== PROFILE LOADING WITH RETRIES ====================
+        async function loadProfileAndProceed(user, retries = 5) {
+            let attempt = 0;
+            while (attempt < retries) {
+                const { data, error } = await supabaseClient
+                    .from('profiles')
+                    .select('role, is_approved')
+                    .eq('id', user.id)
+                    .single();
+
+                if (data && !error) {
+                    currentProfile = data;
+                    // Check approval
+                    if (!currentProfile.is_approved) {
+                        alert('Your account is pending approval by an administrator. You cannot access the system yet.');
+                        await supabaseClient.auth.signOut();
+                        return;
+                    }
+
+                    // Show admin links if role = admin
+                    if (currentProfile.role === 'admin') {
+                        adminLinksDiv.classList.remove('hidden');
+                        mobileAdminLinks.classList.remove('hidden');
+                    } else {
+                        adminLinksDiv.classList.add('hidden');
+                        mobileAdminLinks.classList.add('hidden');
+                    }
+
+                    showApp();
+                    await fetchCases();
+                    if (currentProfile.role === 'admin') {
+                        await fetchAllUsers();
+                        await fetchAllCasesAdmin();
+                    }
+                    window.location.hash = '#dashboard';
+                    return;
+                }
+
+                // Exponential backoff: 200ms, 400ms, 800ms, 1600ms, 3200ms
+                attempt++;
+                if (attempt < retries) {
+                    await new Promise(resolve => setTimeout(resolve, 200 * Math.pow(2, attempt)));
+                }
             }
-            currentProfile = data;
-            return data;
+
+            // If we get here, profile never loaded – sign out
+            console.error('Could not load user profile after multiple attempts');
+            await supabaseClient.auth.signOut();
+            alert('Error loading profile. Please try again later.');
         }
 
         // ==================== AUTH STATE ====================
-        supabaseClient.auth.onAuthStateChange(async (event, session) => {
-            if (session) {
+        supabaseClient.auth.onAuthStateChange((event, session) => {
+            if (session && event === 'SIGNED_IN') {
                 currentUser = session.user;
-                const profile = await fetchProfile();
-                if (!profile) {
-                    // fallback: maybe profile not created yet? try to wait.
-                    setTimeout(async () => {
-                        await fetchProfile();
-                        afterAuth();
-                    }, 1000);
-                } else {
-                    afterAuth();
-                }
-            } else {
+                loadProfileAndProceed(session.user);
+            } else if (!session) {
                 currentUser = null;
                 currentProfile = null;
                 cases = [];
@@ -440,38 +478,6 @@
                 else showPage('login-page');
             }
         });
-
-        async function afterAuth() {
-            if (!currentProfile) {
-                // profile missing? maybe sign out
-                await supabaseClient.auth.signOut();
-                return;
-            }
-
-            // Check if approved
-            if (!currentProfile.is_approved) {
-                alert('Your account is pending approval by an administrator. You cannot access the system yet.');
-                await supabaseClient.auth.signOut();
-                return;
-            }
-
-            // Show admin links if role = admin
-            if (currentProfile.role === 'admin') {
-                adminLinksDiv.classList.remove('hidden');
-                mobileAdminLinks.classList.remove('hidden');
-            } else {
-                adminLinksDiv.classList.add('hidden');
-                mobileAdminLinks.classList.add('hidden');
-            }
-
-            showApp();
-            await fetchCases();
-            if (currentProfile.role === 'admin') {
-                await fetchAllUsers();
-                await fetchAllCasesAdmin(); // for admin cases page
-            }
-            window.location.hash = '#dashboard';
-        }
 
         // ==================== FETCH USER'S CASES ====================
         async function fetchCases() {
@@ -528,7 +534,6 @@
                 </div>
             `).join('');
 
-            // Attach event listeners
             document.querySelectorAll('.approve-btn').forEach(btn => {
                 btn.addEventListener('click', async (e) => {
                     const userId = e.target.dataset.id;
@@ -580,7 +585,7 @@
             else if (hash === 'admin-cases' && currentProfile.role === 'admin') fetchAllCasesAdmin();
         }
 
-        function renderDashboard() { /* same as before, uses cases array */ 
+        function renderDashboard() {
             const today = new Date().toISOString().split('T')[0];
             const upcoming = cases.filter(c => c.case_date >= today && c.status !== 'old');
             const old = cases.filter(c => c.case_date < today || c.status === 'old');
@@ -617,7 +622,7 @@
             `).join('') : '<p class="text-gray-400 col-span-2">No old cases.</p>';
         }
 
-        function renderAllCases() { /* same */
+        function renderAllCases() {
             const container = document.getElementById('all-cases-list');
             container.innerHTML = cases.length ? cases.map(c => {
                 const badge = c.case_date >= new Date().toISOString().split('T')[0] && c.status !== 'old' 
@@ -637,7 +642,7 @@
             }).join('') : '<p class="text-gray-400">No cases yet. Add one!</p>';
         }
 
-        function renderOldCases() { /* same */
+        function renderOldCases() {
             const today = new Date().toISOString().split('T')[0];
             const old = cases.filter(c => c.case_date < today || c.status === 'old');
             const container = document.getElementById('old-cases-list');
@@ -718,8 +723,17 @@
             const errorDiv = document.getElementById('login-error');
             errorDiv.textContent = '';
 
+            // Show spinner
+            loginSpinner.classList.remove('hidden');
+
             const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-            if (error) errorDiv.textContent = error.message;
+            
+            loginSpinner.classList.add('hidden');
+            
+            if (error) {
+                errorDiv.textContent = error.message;
+            }
+            // On success, onAuthStateChange will handle the rest
         });
 
         document.getElementById('signup-form').addEventListener('submit', async (e) => {
@@ -729,7 +743,12 @@
             const msgDiv = document.getElementById('signup-message');
             msgDiv.innerHTML = '';
 
+            signupSpinner.classList.remove('hidden');
+
             const { error } = await supabaseClient.auth.signUp({ email, password });
+            
+            signupSpinner.classList.add('hidden');
+
             if (error) {
                 msgDiv.innerHTML = `<span class="text-red-500">${error.message}</span>`;
             } else {
@@ -765,7 +784,7 @@
 
         async function deleteAccount() {
             if (!confirm('Are you sure? This will permanently delete your account and ALL cases. This action cannot be undone.')) return;
-            const { error } = await supabaseClient.rpc('delete_my_account'); // we need this function too
+            const { error } = await supabaseClient.rpc('delete_my_account');
             if (error) {
                 alert('Error deleting account: ' + error.message);
             } else {
@@ -861,16 +880,7 @@
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (session) {
                 currentUser = session.user;
-                const profile = await fetchProfile();
-                if (profile) afterAuth();
-                else {
-                    // wait a bit and retry
-                    setTimeout(async () => {
-                        await fetchProfile();
-                        if (currentProfile) afterAuth();
-                        else await supabaseClient.auth.signOut();
-                    }, 1500);
-                }
+                await loadProfileAndProceed(session.user);
             } else {
                 showAuth();
                 showPage('login-page');
@@ -888,7 +898,7 @@
             });
         });
 
-        // Disable autofill
+        // Disable autofill background
         document.querySelectorAll('input, textarea').forEach(el => el.setAttribute('autocomplete', 'off'));
     })();
 </script>
