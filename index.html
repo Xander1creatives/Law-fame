@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LegalCase Manager · Secure</title>
-    <!-- Tailwind + Font Awesome -->
+    <title>LegalCase Manager · Admin & User</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
@@ -14,7 +13,6 @@
         }
         .page { display: none; }
         .page.active { display: block; }
-        /* Modal */
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 100; }
         .modal.show { display: flex; }
         .modal-content { max-width: 500px; width: 90%; max-height: 90vh; overflow-y: auto; }
@@ -24,614 +22,875 @@
 </head>
 <body class="bg-gray-50 font-sans antialiased">
 
-    <!-- Main container -->
-    <div id="app" class="min-h-screen flex flex-col md:flex-row">
-        <!-- Sidebar (same) -->
-        <aside id="sidebar" class="hidden md:flex md:w-64 bg-indigo-800 text-white p-6 flex-col shadow-xl">
-            <h2 class="text-2xl font-bold mb-8"><i class="fas fa-gavel mr-2"></i>LegalCase</h2>
-            <nav class="space-y-3 flex-1">
-                <a href="#dashboard" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-indigo-700 transition sidebar-link"><i class="fas fa-tachometer-alt w-6"></i><span>Dashboard</span></a>
-                <a href="#cases" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-indigo-700 transition sidebar-link"><i class="fas fa-folder-open w-6"></i><span>All Cases</span></a>
-                <a href="#add-case" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-indigo-700 transition sidebar-link"><i class="fas fa-plus-circle w-6"></i><span>Schedule New Case</span></a>
-                <a href="#old-cases" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-indigo-700 transition sidebar-link"><i class="fas fa-archive w-6"></i><span>Old / Closed</span></a>
-            </nav>
-            <div class="border-t border-indigo-600 pt-4 mt-4">
-                <div class="flex items-center space-x-3 mb-3">
-                    <div class="w-8 h-8 bg-indigo-300 rounded-full flex items-center justify-center text-indigo-800 font-bold" id="user-initials"></div>
-                    <span class="text-sm truncate" id="user-email"></span>
-                </div>
-                <button id="logoutBtn" class="w-full text-left p-3 rounded-lg hover:bg-indigo-700 transition"><i class="fas fa-sign-out-alt mr-3"></i>Logout</button>
+<div id="app" class="min-h-screen flex flex-col md:flex-row">
+    <!-- SIDEBAR (desktop) -->
+    <aside id="sidebar" class="hidden md:flex md:w-64 bg-indigo-800 text-white p-6 flex-col shadow-xl">
+        <h2 class="text-2xl font-bold mb-8"><i class="fas fa-gavel mr-2"></i>LegalCase</h2>
+        <nav class="space-y-3 flex-1" id="sidebar-nav">
+            <!-- Common links -->
+            <a href="#dashboard" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-indigo-700 transition sidebar-link"><i class="fas fa-tachometer-alt w-6"></i><span>Dashboard</span></a>
+            <a href="#cases" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-indigo-700 transition sidebar-link"><i class="fas fa-folder-open w-6"></i><span>All Cases</span></a>
+            <a href="#add-case" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-indigo-700 transition sidebar-link"><i class="fas fa-plus-circle w-6"></i><span>Schedule New Case</span></a>
+            <a href="#old-cases" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-indigo-700 transition sidebar-link"><i class="fas fa-archive w-6"></i><span>Old / Closed</span></a>
+            <!-- Admin links (hidden initially) -->
+            <div id="admin-links" class="hidden">
+                <hr class="border-indigo-600 my-2">
+                <a href="#admin-users" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-indigo-700 transition sidebar-link"><i class="fas fa-users-cog w-6"></i><span>Manage Users</span></a>
+                <a href="#admin-cases" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-indigo-700 transition sidebar-link"><i class="fas fa-globe w-6"></i><span>All Cases (Admin)</span></a>
             </div>
-        </aside>
-
-        <!-- Mobile header -->
-        <div id="mobile-header" class="md:hidden bg-indigo-800 text-white p-4 flex justify-between items-center hidden">
-            <span class="font-bold text-xl">LegalCase</span>
-            <button id="mobileMenuBtn" class="focus:outline-none"><i class="fas fa-bars text-2xl"></i></button>
-        </div>
-
-        <!-- Main content -->
-        <main class="flex-1 p-4 md:p-8 overflow-auto bg-gray-50" id="main-content">
-            <!-- AUTH PAGES (unchanged) -->
-            <div id="auth-pages">
-                <!-- Login page -->
-                <div id="login-page" class="page active max-w-md mx-auto mt-10 md:mt-20">
-                    <div class="bg-white p-8 rounded-2xl shadow-xl border border-gray-100">
-                        <h2 class="text-3xl font-bold text-gray-800 mb-2">Welcome back</h2>
-                        <p class="text-gray-500 mb-6">Sign in to manage your cases</p>
-                        <form id="login-form" autocomplete="off">
-                            <div class="mb-4">
-                                <label class="block text-gray-700 text-sm font-semibold mb-2">Email</label>
-                                <input type="email" name="email" autocomplete="off" class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-300 focus:border-indigo-500 outline-none transition" required>
-                            </div>
-                            <div class="mb-6">
-                                <label class="block text-gray-700 text-sm font-semibold mb-2">Password</label>
-                                <input type="password" name="password" autocomplete="new-password" class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-300 focus:border-indigo-500 outline-none transition" required>
-                            </div>
-                            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition shadow-md">Sign In</button>
-                            <p class="text-center text-gray-600 mt-4">Don't have an account? <a href="#signup" class="text-indigo-600 hover:underline font-medium">Sign up</a></p>
-                        </form>
-                        <div id="login-error" class="mt-4 text-red-500 text-sm"></div>
-                    </div>
-                </div>
-
-                <!-- Signup page (unchanged) -->
-                <div id="signup-page" class="page max-w-md mx-auto mt-10 md:mt-20">
-                    <div class="bg-white p-8 rounded-2xl shadow-xl border border-gray-100">
-                        <h2 class="text-3xl font-bold text-gray-800 mb-2">Create account</h2>
-                        <p class="text-gray-500 mb-6">Get started with LegalCase</p>
-                        <form id="signup-form" autocomplete="off">
-                            <div class="mb-4">
-                                <label class="block text-gray-700 text-sm font-semibold mb-2">Email</label>
-                                <input type="email" name="email" autocomplete="off" class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-300 focus:border-indigo-500 outline-none transition" required>
-                            </div>
-                            <div class="mb-6">
-                                <label class="block text-gray-700 text-sm font-semibold mb-2">Password</label>
-                                <input type="password" name="password" autocomplete="new-password" class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-300 focus:border-indigo-500 outline-none transition" required>
-                            </div>
-                            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition shadow-md">Sign Up</button>
-                            <p class="text-center text-gray-600 mt-4">Already registered? <a href="#login" class="text-indigo-600 hover:underline font-medium">Sign in</a></p>
-                        </form>
-                        <div id="signup-message" class="mt-4 text-sm text-center"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- APP PAGES (protected) -->
-            <div id="app-pages" class="hidden">
-                <!-- Dashboard (same layout, but we'll show more info later) -->
-                <div id="dashboard-page" class="page">
-                    <h1 class="text-3xl font-bold text-gray-800 mb-2">Dashboard</h1>
-                    <p class="text-gray-500 mb-8">Overview of your cases</p>
-                    
-                    <div class="grid lg:grid-cols-3 gap-6 mb-10">
-                        <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-indigo-500">
-                            <h3 class="text-lg font-semibold text-gray-600">Upcoming cases</h3>
-                            <p class="text-4xl font-bold text-indigo-700" id="upcoming-count">0</p>
-                        </div>
-                        <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-amber-500">
-                            <h3 class="text-lg font-semibold text-gray-600">Old / closed</h3>
-                            <p class="text-4xl font-bold text-amber-700" id="old-count">0</p>
-                        </div>
-                        <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-emerald-500">
-                            <h3 class="text-lg font-semibold text-gray-600">Total clients</h3>
-                            <p class="text-4xl font-bold text-emerald-700" id="client-count">0</p>
-                        </div>
-                    </div>
-
-                    <h2 class="text-2xl font-bold text-gray-800 mb-4">⏳ Upcoming (with countdown)</h2>
-                    <div id="upcoming-list" class="grid md:grid-cols-2 gap-4 mb-8"></div>
-
-                    <h2 class="text-2xl font-bold text-gray-800 mb-4">📂 Recent old cases</h2>
-                    <div id="recent-old-list" class="grid md:grid-cols-2 gap-4"></div>
-                </div>
-
-                <!-- All Cases -->
-                <div id="cases-page" class="page">
-                    <h1 class="text-3xl font-bold text-gray-800 mb-6">All Cases</h1>
-                    <div id="all-cases-list" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
-                </div>
-
-                <!-- Add new case (with extra fields) -->
-                <div id="add-case-page" class="page max-w-2xl mx-auto">
-                    <h1 class="text-3xl font-bold text-gray-800 mb-6">Schedule a new case</h1>
-                    <div class="bg-white p-6 rounded-xl shadow-md">
-                        <form id="add-case-form" autocomplete="off">
-                            <div class="mb-4">
-                                <label class="block text-gray-700 font-semibold mb-2">Case title *</label>
-                                <input type="text" id="case-title" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-300" autocomplete="off">
-                            </div>
-                            <div class="mb-4">
-                                <label class="block text-gray-700 font-semibold mb-2">Description</label>
-                                <textarea id="case-desc" rows="3" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-300"></textarea>
-                            </div>
-                            <div class="grid md:grid-cols-2 gap-4 mb-4">
-                                <div>
-                                    <label class="block text-gray-700 font-semibold mb-2">Case date *</label>
-                                    <input type="date" id="case-date" required class="w-full px-4 py-2 border rounded-lg">
-                                </div>
-                                <div>
-                                    <label class="block text-gray-700 font-semibold mb-2">Status</label>
-                                    <select id="case-status" class="w-full px-4 py-2 border rounded-lg bg-white">
-                                        <option value="upcoming">Upcoming</option>
-                                        <option value="old">Old / Closed</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="grid md:grid-cols-2 gap-4 mb-4">
-                                <div>
-                                    <label class="block text-gray-700 font-semibold mb-2">Client name</label>
-                                    <input type="text" id="client-name" class="w-full px-4 py-2 border rounded-lg" autocomplete="off">
-                                </div>
-                                <div>
-                                    <label class="block text-gray-700 font-semibold mb-2">Client contact</label>
-                                    <input type="text" id="client-contact" class="w-full px-4 py-2 border rounded-lg" autocomplete="off">
-                                </div>
-                            </div>
-                            <!-- NEW FIELDS: Nationality and ID Number -->
-                            <div class="grid md:grid-cols-2 gap-4 mb-6">
-                                <div>
-                                    <label class="block text-gray-700 font-semibold mb-2">Nationality</label>
-                                    <input type="text" id="client-nationality" class="w-full px-4 py-2 border rounded-lg" autocomplete="off">
-                                </div>
-                                <div>
-                                    <label class="block text-gray-700 font-semibold mb-2">ID Number</label>
-                                    <input type="text" id="client-id" class="w-full px-4 py-2 border rounded-lg" autocomplete="off">
-                                </div>
-                            </div>
-                            <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-lg transition">Create case</button>
-                        </form>
-                        <div id="case-form-message" class="mt-4 text-sm"></div>
-                    </div>
-                </div>
-
-                <!-- Old cases dedicated page -->
-                <div id="old-cases-page" class="page">
-                    <h1 class="text-3xl font-bold text-gray-800 mb-6">Old / Closed Cases</h1>
-                    <div id="old-cases-list" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
-                </div>
-            </div>
-        </main>
-    </div>
-
-    <!-- Mobile sidebar (same) -->
-    <div id="mobile-sidebar" class="fixed inset-0 bg-indigo-900 text-white p-6 transform -translate-x-full transition-transform duration-300 md:hidden z-50">
-        <button id="closeMobileMenu" class="absolute top-4 right-4 text-2xl"><i class="fas fa-times"></i></button>
-        <nav class="mt-12 space-y-4">
-            <a href="#dashboard" class="block py-3 text-lg sidebar-link-mobile"><i class="fas fa-tachometer-alt mr-3"></i>Dashboard</a>
-            <a href="#cases" class="block py-3 text-lg sidebar-link-mobile"><i class="fas fa-folder-open mr-3"></i>All Cases</a>
-            <a href="#add-case" class="block py-3 text-lg sidebar-link-mobile"><i class="fas fa-plus-circle mr-3"></i>Schedule New Case</a>
-            <a href="#old-cases" class="block py-3 text-lg sidebar-link-mobile"><i class="fas fa-archive mr-3"></i>Old / Closed</a>
-            <hr class="border-indigo-700">
-            <button id="mobileLogout" class="block w-full text-left py-3 text-lg"><i class="fas fa-sign-out-alt mr-3"></i>Logout</button>
         </nav>
-    </div>
-
-    <!-- MODAL for viewing/editing client details -->
-    <div id="clientModal" class="modal">
-        <div class="modal-content bg-white rounded-2xl shadow-2xl p-6">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-2xl font-bold text-gray-800">Client Details</h3>
-                <button id="closeModalBtn" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+        <div class="border-t border-indigo-600 pt-4 mt-4">
+            <div class="flex items-center space-x-3 mb-3">
+                <div class="w-8 h-8 bg-indigo-300 rounded-full flex items-center justify-center text-indigo-800 font-bold" id="user-initials"></div>
+                <span class="text-sm truncate" id="user-email"></span>
             </div>
-            <form id="edit-client-form" autocomplete="off">
-                <input type="hidden" id="edit-case-id">
-                
-                <div class="mb-3">
-                    <label class="block text-gray-700 font-semibold mb-1">Case Title</label>
-                    <input type="text" id="edit-title" class="w-full px-4 py-2 border rounded-lg bg-gray-100" readonly>
-                </div>
-                <div class="mb-3">
-                    <label class="block text-gray-700 font-semibold mb-1">Description</label>
-                    <textarea id="edit-desc" rows="2" class="w-full px-4 py-2 border rounded-lg"></textarea>
-                </div>
-                <div class="grid grid-cols-2 gap-3 mb-3">
-                    <div>
-                        <label class="block text-gray-700 font-semibold mb-1">Case Date</label>
-                        <input type="date" id="edit-date" class="w-full px-4 py-2 border rounded-lg">
-                    </div>
-                    <div>
-                        <label class="block text-gray-700 font-semibold mb-1">Status</label>
-                        <select id="edit-status" class="w-full px-4 py-2 border rounded-lg bg-white">
-                            <option value="upcoming">Upcoming</option>
-                            <option value="old">Old / Closed</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-3 mb-3">
-                    <div>
-                        <label class="block text-gray-700 font-semibold mb-1">Client Name</label>
-                        <input type="text" id="edit-client-name" class="w-full px-4 py-2 border rounded-lg">
-                    </div>
-                    <div>
-                        <label class="block text-gray-700 font-semibold mb-1">Contact</label>
-                        <input type="text" id="edit-client-contact" class="w-full px-4 py-2 border rounded-lg">
-                    </div>
-                </div>
-                <!-- NEW fields in modal -->
-                <div class="grid grid-cols-2 gap-3 mb-4">
-                    <div>
-                        <label class="block text-gray-700 font-semibold mb-1">Nationality</label>
-                        <input type="text" id="edit-nationality" class="w-full px-4 py-2 border rounded-lg">
-                    </div>
-                    <div>
-                        <label class="block text-gray-700 font-semibold mb-1">ID Number</label>
-                        <input type="text" id="edit-id" class="w-full px-4 py-2 border rounded-lg">
-                    </div>
-                </div>
-                <div class="flex justify-end space-x-3">
-                    <button type="button" id="cancelEditBtn" class="px-4 py-2 border rounded-lg text-gray-700 hover:bg-gray-100">Cancel</button>
-                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Save Changes</button>
-                </div>
-            </form>
+            <button id="logoutBtn" class="w-full text-left p-3 rounded-lg hover:bg-indigo-700 transition"><i class="fas fa-sign-out-alt mr-3"></i>Logout</button>
+            <button id="deleteAccountBtn" class="w-full text-left p-3 rounded-lg hover:bg-red-600 transition mt-2"><i class="fas fa-trash-alt mr-3"></i>Delete Account</button>
         </div>
+    </aside>
+
+    <!-- Mobile header -->
+    <div id="mobile-header" class="md:hidden bg-indigo-800 text-white p-4 flex justify-between items-center hidden">
+        <span class="font-bold text-xl">LegalCase</span>
+        <button id="mobileMenuBtn" class="focus:outline-none"><i class="fas fa-bars text-2xl"></i></button>
     </div>
 
-    <!-- Supabase JS -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script>
-        (function() {
-            // ==================== CONFIG ====================
-            const SUPABASE_URL = 'https://indrwmklaohnnoebbtef.supabase.co';
-            const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImluZHJ3bWtsYW9obm5vZWJidGVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMxNjU1MTUsImV4cCI6MjA4ODc0MTUxNX0.AFQvyeQnTUTwHeIoc9gusfieJ_HpYRmyv_8fa-Xal1I';
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 p-4 md:p-8 overflow-auto bg-gray-50" id="main-content">
 
-            const { createClient } = supabase;
-            const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-                auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
-            });
-
-            // ==================== STATE ====================
-            let currentUser = null;
-            let cases = [];
-
-            // DOM elements
-            const authPagesDiv = document.getElementById('auth-pages');
-            const appPagesDiv = document.getElementById('app-pages');
-            const sidebar = document.getElementById('sidebar');
-            const mobileHeader = document.getElementById('mobile-header');
-            const mobileSidebar = document.getElementById('mobile-sidebar');
-            const userInitials = document.getElementById('user-initials');
-            const userEmailSpan = document.getElementById('user-email');
-
-            // Modal elements
-            const modal = document.getElementById('clientModal');
-            const closeModalBtn = document.getElementById('closeModalBtn');
-            const cancelEditBtn = document.getElementById('cancelEditBtn');
-            const editForm = document.getElementById('edit-client-form');
-
-            // ==================== HELPERS ====================
-            function showPage(pageId) {
-                document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-                document.getElementById(pageId)?.classList.add('active');
-            }
-
-            function showAuth() {
-                authPagesDiv.classList.remove('hidden');
-                appPagesDiv.classList.add('hidden');
-                sidebar.classList.add('hidden');
-                mobileHeader.classList.add('hidden');
-                mobileSidebar.classList.add('-translate-x-full');
-            }
-
-            function showApp() {
-                authPagesDiv.classList.add('hidden');
-                appPagesDiv.classList.remove('hidden');
-                sidebar.classList.remove('hidden');
-                mobileHeader.classList.remove('hidden');
-                if (currentUser) {
-                    userEmailSpan.textContent = currentUser.email;
-                    userInitials.textContent = currentUser.email.charAt(0).toUpperCase();
-                }
-            }
-
-            function clearAllStorage() {
-                localStorage.clear();
-                sessionStorage.clear();
-            }
-
-            // Escape HTML
-            function escapeHtml(unsafe) {
-                if (!unsafe) return '';
-                return unsafe.replace(/[&<>"']/g, m => {
-                    if(m === '&') return '&amp;'; if(m === '<') return '&lt;'; if(m === '>') return '&gt;';
-                    if(m === '"') return '&quot;'; if(m === "'") return '&#039;';
-                    return m;
-                });
-            }
-
-            // ==================== AUTH ====================
-            supabaseClient.auth.onAuthStateChange((event, session) => {
-                if (session) {
-                    currentUser = session.user;
-                    showApp();
-                    fetchCases();
-                    window.location.hash = '#dashboard';
-                } else {
-                    currentUser = null;
-                    cases = [];
-                    showAuth();
-                    if (window.location.hash === '#signup') showPage('signup-page');
-                    else showPage('login-page');
-                    if (window.location.hash && !['#login', '#signup'].includes(window.location.hash)) {
-                        window.location.hash = '#login';
-                    }
-                }
-            });
-
-            // ==================== FETCH CASES ====================
-            async function fetchCases() {
-                if (!currentUser) return;
-                const { data, error } = await supabaseClient
-                    .from('cases')
-                    .select('*')
-                    .order('case_date', { ascending: true });
-                if (error) {
-                    console.error('Error fetching cases:', error.message);
-                    return;
-                }
-                cases = data || [];
-                renderCurrentPage();
-            }
-
-            // ==================== RENDER ====================
-            function renderCurrentPage() {
-                if (!currentUser) return;
-                const hash = window.location.hash.slice(1) || 'dashboard';
-                showPage(hash + '-page');
-
-                if (hash === 'dashboard') renderDashboard();
-                else if (hash === 'cases') renderAllCases();
-                else if (hash === 'old-cases') renderOldCases();
-            }
-
-            function renderDashboard() {
-                const today = new Date().toISOString().split('T')[0];
-                const upcoming = cases.filter(c => c.case_date >= today && c.status !== 'old');
-                const old = cases.filter(c => c.case_date < today || c.status === 'old');
-                const uniqueClients = new Set(cases.map(c => c.client_name).filter(Boolean)).size;
-
-                document.getElementById('upcoming-count').textContent = upcoming.length;
-                document.getElementById('old-count').textContent = old.length;
-                document.getElementById('client-count').textContent = uniqueClients;
-
-                const upcomingDiv = document.getElementById('upcoming-list');
-                upcomingDiv.innerHTML = upcoming.length ? upcoming.map(c => {
-                    const daysLeft = Math.ceil((new Date(c.case_date) - new Date()) / (1000*60*60*24));
-                    return `
-                        <div class="case-card bg-white p-5 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition" data-id="${c.id}">
-                            <h3 class="font-bold text-lg text-gray-800">${escapeHtml(c.title)}</h3>
-                            <p class="text-sm text-gray-500 mt-1">${escapeHtml(c.client_name || 'No client')}</p>
-                            <p class="text-xs text-gray-400">${escapeHtml(c.nationality || '')} ${c.id_number ? '· ID: '+escapeHtml(c.id_number) : ''}</p>
-                            <div class="flex justify-between items-center mt-3">
-                                <span class="text-indigo-600 font-semibold">${daysLeft} day${daysLeft!==1?'s':''} left</span>
-                                <span class="text-sm bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full">${c.case_date}</span>
-                            </div>
+        <!-- AUTH PAGES -->
+        <div id="auth-pages">
+            <!-- Login -->
+            <div id="login-page" class="page active max-w-md mx-auto mt-10 md:mt-20">
+                <div class="bg-white p-8 rounded-2xl shadow-xl border border-gray-100">
+                    <h2 class="text-3xl font-bold text-gray-800 mb-2">Welcome back</h2>
+                    <p class="text-gray-500 mb-6">Sign in to manage your cases</p>
+                    <form id="login-form" autocomplete="off">
+                        <div class="mb-4">
+                            <label class="block text-gray-700 text-sm font-semibold mb-2">Email</label>
+                            <input type="email" name="email" autocomplete="off" class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-300 focus:border-indigo-500 outline-none transition" required>
                         </div>
-                    `;
-                }).join('') : '<p class="text-gray-400 col-span-2">No upcoming cases.</p>';
+                        <div class="mb-6">
+                            <label class="block text-gray-700 text-sm font-semibold mb-2">Password</label>
+                            <input type="password" name="password" autocomplete="new-password" class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-300 focus:border-indigo-500 outline-none transition" required>
+                        </div>
+                        <div class="flex justify-between items-center mb-4">
+                            <a href="#forgot-password" class="text-sm text-indigo-600 hover:underline">Forgot password?</a>
+                        </div>
+                        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition shadow-md">Sign In</button>
+                        <p class="text-center text-gray-600 mt-4">Don't have an account? <a href="#signup" class="text-indigo-600 hover:underline font-medium">Sign up</a></p>
+                    </form>
+                    <div id="login-error" class="mt-4 text-red-500 text-sm"></div>
+                </div>
+            </div>
 
-                const recentOldDiv = document.getElementById('recent-old-list');
-                const recentOld = old.slice(0,4);
-                recentOldDiv.innerHTML = recentOld.length ? recentOld.map(c => `
-                    <div class="case-card bg-white p-5 rounded-xl shadow-sm border border-gray-100" data-id="${c.id}">
-                        <h3 class="font-bold text-gray-800">${escapeHtml(c.title)}</h3>
-                        <p class="text-sm text-gray-500">${escapeHtml(c.client_name || 'No client')} · ${c.case_date}</p>
-                        <p class="text-xs text-gray-400">${escapeHtml(c.nationality || '')} ${c.id_number ? '· ID: '+escapeHtml(c.id_number) : ''}</p>
+            <!-- Signup -->
+            <div id="signup-page" class="page max-w-md mx-auto mt-10 md:mt-20">
+                <div class="bg-white p-8 rounded-2xl shadow-xl border border-gray-100">
+                    <h2 class="text-3xl font-bold text-gray-800 mb-2">Create account</h2>
+                    <p class="text-gray-500 mb-6">Get started with LegalCase</p>
+                    <form id="signup-form" autocomplete="off">
+                        <div class="mb-4">
+                            <label class="block text-gray-700 text-sm font-semibold mb-2">Email</label>
+                            <input type="email" name="email" autocomplete="off" class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-300 focus:border-indigo-500 outline-none transition" required>
+                        </div>
+                        <div class="mb-6">
+                            <label class="block text-gray-700 text-sm font-semibold mb-2">Password</label>
+                            <input type="password" name="password" autocomplete="new-password" class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-300 focus:border-indigo-500 outline-none transition" required>
+                        </div>
+                        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition shadow-md">Sign Up</button>
+                        <p class="text-center text-gray-600 mt-4">Already registered? <a href="#login" class="text-indigo-600 hover:underline font-medium">Sign in</a></p>
+                    </form>
+                    <div id="signup-message" class="mt-4 text-sm text-center"></div>
+                </div>
+            </div>
+
+            <!-- Forgot Password -->
+            <div id="forgot-page" class="page max-w-md mx-auto mt-10 md:mt-20">
+                <div class="bg-white p-8 rounded-2xl shadow-xl border border-gray-100">
+                    <h2 class="text-3xl font-bold text-gray-800 mb-2">Reset password</h2>
+                    <p class="text-gray-500 mb-6">Enter your email to receive a reset link</p>
+                    <form id="forgot-form" autocomplete="off">
+                        <div class="mb-4">
+                            <label class="block text-gray-700 text-sm font-semibold mb-2">Email</label>
+                            <input type="email" name="email" autocomplete="off" class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-300 focus:border-indigo-500 outline-none transition" required>
+                        </div>
+                        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition shadow-md">Send reset link</button>
+                        <p class="text-center text-gray-600 mt-4"><a href="#login" class="text-indigo-600 hover:underline">Back to login</a></p>
+                    </form>
+                    <div id="forgot-message" class="mt-4 text-sm text-center"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- APP PAGES (protected) -->
+        <div id="app-pages" class="hidden">
+            <!-- Dashboard (same as before) -->
+            <div id="dashboard-page" class="page">
+                <h1 class="text-3xl font-bold text-gray-800 mb-2">Dashboard</h1>
+                <p class="text-gray-500 mb-8">Overview of your cases</p>
+                <div class="grid lg:grid-cols-3 gap-6 mb-10">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-indigo-500">
+                        <h3 class="text-lg font-semibold text-gray-600">Upcoming cases</h3>
+                        <p class="text-4xl font-bold text-indigo-700" id="upcoming-count">0</p>
                     </div>
-                `).join('') : '<p class="text-gray-400 col-span-2">No old cases.</p>';
-            }
+                    <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-amber-500">
+                        <h3 class="text-lg font-semibold text-gray-600">Old / closed</h3>
+                        <p class="text-4xl font-bold text-amber-700" id="old-count">0</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-emerald-500">
+                        <h3 class="text-lg font-semibold text-gray-600">Total clients</h3>
+                        <p class="text-4xl font-bold text-emerald-700" id="client-count">0</p>
+                    </div>
+                </div>
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">⏳ Upcoming (with countdown)</h2>
+                <div id="upcoming-list" class="grid md:grid-cols-2 gap-4 mb-8"></div>
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">📂 Recent old cases</h2>
+                <div id="recent-old-list" class="grid md:grid-cols-2 gap-4"></div>
+            </div>
 
-            function renderAllCases() {
-                const container = document.getElementById('all-cases-list');
-                container.innerHTML = cases.length ? cases.map(c => {
-                    const badge = c.case_date >= new Date().toISOString().split('T')[0] && c.status !== 'old' 
-                        ? '<span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Upcoming</span>'
-                        : '<span class="bg-gray-200 text-gray-700 text-xs px-2 py-1 rounded-full">Old</span>';
-                    return `
-                        <div class="case-card bg-white p-5 rounded-xl shadow-sm border" data-id="${c.id}">
-                            <div class="flex justify-between items-start">
-                                <h3 class="font-bold text-gray-800">${escapeHtml(c.title)}</h3>
-                                ${badge}
-                            </div>
-                            <p class="text-sm text-gray-600 mt-1">${escapeHtml(c.client_name || 'No client')}</p>
-                            <p class="text-xs text-gray-400">${escapeHtml(c.nationality || '')} ${c.id_number ? '· ID: '+escapeHtml(c.id_number) : ''}</p>
-                            <p class="text-xs text-gray-400 mt-2">${c.case_date}</p>
+            <!-- All Cases (user's own) -->
+            <div id="cases-page" class="page">
+                <h1 class="text-3xl font-bold text-gray-800 mb-6">All Cases</h1>
+                <div id="all-cases-list" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+            </div>
+
+            <!-- Add Case (same) -->
+            <div id="add-case-page" class="page max-w-2xl mx-auto">
+                <h1 class="text-3xl font-bold text-gray-800 mb-6">Schedule a new case</h1>
+                <div class="bg-white p-6 rounded-xl shadow-md">
+                    <form id="add-case-form" autocomplete="off">
+                        <div class="mb-4">
+                            <label class="block text-gray-700 font-semibold mb-2">Case title *</label>
+                            <input type="text" id="case-title" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-300" autocomplete="off">
                         </div>
-                    `;
-                }).join('') : '<p class="text-gray-400">No cases yet. Add one!</p>';
+                        <div class="mb-4">
+                            <label class="block text-gray-700 font-semibold mb-2">Description</label>
+                            <textarea id="case-desc" rows="3" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-300"></textarea>
+                        </div>
+                        <div class="grid md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label class="block text-gray-700 font-semibold mb-2">Case date *</label>
+                                <input type="date" id="case-date" required class="w-full px-4 py-2 border rounded-lg">
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 font-semibold mb-2">Status</label>
+                                <select id="case-status" class="w-full px-4 py-2 border rounded-lg bg-white">
+                                    <option value="upcoming">Upcoming</option>
+                                    <option value="old">Old / Closed</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="grid md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label class="block text-gray-700 font-semibold mb-2">Client name</label>
+                                <input type="text" id="client-name" class="w-full px-4 py-2 border rounded-lg" autocomplete="off">
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 font-semibold mb-2">Client contact</label>
+                                <input type="text" id="client-contact" class="w-full px-4 py-2 border rounded-lg" autocomplete="off">
+                            </div>
+                        </div>
+                        <div class="grid md:grid-cols-2 gap-4 mb-6">
+                            <div>
+                                <label class="block text-gray-700 font-semibold mb-2">Nationality</label>
+                                <input type="text" id="client-nationality" class="w-full px-4 py-2 border rounded-lg" autocomplete="off">
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 font-semibold mb-2">ID Number</label>
+                                <input type="text" id="client-id" class="w-full px-4 py-2 border rounded-lg" autocomplete="off">
+                            </div>
+                        </div>
+                        <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-lg transition">Create case</button>
+                    </form>
+                    <div id="case-form-message" class="mt-4 text-sm"></div>
+                </div>
+            </div>
+
+            <!-- Old Cases (user's own) -->
+            <div id="old-cases-page" class="page">
+                <h1 class="text-3xl font-bold text-gray-800 mb-6">Old / Closed Cases</h1>
+                <div id="old-cases-list" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+            </div>
+
+            <!-- ADMIN: Manage Users -->
+            <div id="admin-users-page" class="page">
+                <h1 class="text-3xl font-bold text-gray-800 mb-6">Manage Users</h1>
+                <div class="bg-white p-4 rounded-xl shadow-sm mb-6">
+                    <h2 class="text-xl font-bold mb-4">Add New User</h2>
+                    <form id="admin-add-user-form" class="grid md:grid-cols-2 gap-4" autocomplete="off">
+                        <input type="email" id="new-user-email" placeholder="Email" required class="px-4 py-2 border rounded-lg">
+                        <input type="password" id="new-user-password" placeholder="Password" required class="px-4 py-2 border rounded-lg">
+                        <select id="new-user-role" class="px-4 py-2 border rounded-lg">
+                            <option value="user">User</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                        <label class="flex items-center space-x-2">
+                            <input type="checkbox" id="new-user-approved" class="rounded">
+                            <span>Approved immediately</span>
+                        </label>
+                        <button type="submit" class="md:col-span-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">Create User & Send Confirmation</button>
+                    </form>
+                    <div id="admin-add-message" class="mt-2 text-sm"></div>
+                </div>
+                <div id="users-list" class="space-y-3"></div>
+            </div>
+
+            <!-- ADMIN: All Cases -->
+            <div id="admin-cases-page" class="page">
+                <h1 class="text-3xl font-bold text-gray-800 mb-6">All Cases (All Users)</h1>
+                <div id="admin-cases-list" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Mobile sidebar -->
+<div id="mobile-sidebar" class="fixed inset-0 bg-indigo-900 text-white p-6 transform -translate-x-full transition-transform duration-300 md:hidden z-50">
+    <button id="closeMobileMenu" class="absolute top-4 right-4 text-2xl"><i class="fas fa-times"></i></button>
+    <nav class="mt-12 space-y-4" id="mobile-nav">
+        <a href="#dashboard" class="block py-3 text-lg sidebar-link-mobile"><i class="fas fa-tachometer-alt mr-3"></i>Dashboard</a>
+        <a href="#cases" class="block py-3 text-lg sidebar-link-mobile"><i class="fas fa-folder-open mr-3"></i>All Cases</a>
+        <a href="#add-case" class="block py-3 text-lg sidebar-link-mobile"><i class="fas fa-plus-circle mr-3"></i>Schedule New Case</a>
+        <a href="#old-cases" class="block py-3 text-lg sidebar-link-mobile"><i class="fas fa-archive mr-3"></i>Old / Closed</a>
+        <div id="mobile-admin-links" class="hidden">
+            <hr class="border-indigo-700">
+            <a href="#admin-users" class="block py-3 text-lg sidebar-link-mobile"><i class="fas fa-users-cog mr-3"></i>Manage Users</a>
+            <a href="#admin-cases" class="block py-3 text-lg sidebar-link-mobile"><i class="fas fa-globe mr-3"></i>All Cases (Admin)</a>
+        </div>
+        <hr class="border-indigo-700">
+        <button id="mobileLogout" class="block w-full text-left py-3 text-lg"><i class="fas fa-sign-out-alt mr-3"></i>Logout</button>
+        <button id="mobileDeleteAccount" class="block w-full text-left py-3 text-lg hover:bg-red-600"><i class="fas fa-trash-alt mr-3"></i>Delete Account</button>
+    </nav>
+</div>
+
+<!-- Client details modal (same) -->
+<div id="clientModal" class="modal">
+    <div class="modal-content bg-white rounded-2xl shadow-2xl p-6">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-2xl font-bold text-gray-800">Client Details</h3>
+            <button id="closeModalBtn" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+        </div>
+        <form id="edit-client-form" autocomplete="off">
+            <input type="hidden" id="edit-case-id">
+            <div class="mb-3">
+                <label class="block text-gray-700 font-semibold mb-1">Case Title</label>
+                <input type="text" id="edit-title" class="w-full px-4 py-2 border rounded-lg bg-gray-100" readonly>
+            </div>
+            <div class="mb-3">
+                <label class="block text-gray-700 font-semibold mb-1">Description</label>
+                <textarea id="edit-desc" rows="2" class="w-full px-4 py-2 border rounded-lg"></textarea>
+            </div>
+            <div class="grid grid-cols-2 gap-3 mb-3">
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-1">Case Date</label>
+                    <input type="date" id="edit-date" class="w-full px-4 py-2 border rounded-lg">
+                </div>
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-1">Status</label>
+                    <select id="edit-status" class="w-full px-4 py-2 border rounded-lg bg-white">
+                        <option value="upcoming">Upcoming</option>
+                        <option value="old">Old / Closed</option>
+                    </select>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3 mb-3">
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-1">Client Name</label>
+                    <input type="text" id="edit-client-name" class="w-full px-4 py-2 border rounded-lg">
+                </div>
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-1">Contact</label>
+                    <input type="text" id="edit-client-contact" class="w-full px-4 py-2 border rounded-lg">
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3 mb-4">
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-1">Nationality</label>
+                    <input type="text" id="edit-nationality" class="w-full px-4 py-2 border rounded-lg">
+                </div>
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-1">ID Number</label>
+                    <input type="text" id="edit-id" class="w-full px-4 py-2 border rounded-lg">
+                </div>
+            </div>
+            <div class="flex justify-end space-x-3">
+                <button type="button" id="cancelEditBtn" class="px-4 py-2 border rounded-lg text-gray-700 hover:bg-gray-100">Cancel</button>
+                <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+    (function() {
+        // ==================== CONFIG ====================
+        const SUPABASE_URL = 'https://oqyskxuklevhzspmndig.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9xeXNreHVrbGV2aHpzcG1uZGlnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2NjMyMTEsImV4cCI6MjA4OTIzOTIxMX0.3ZRw0usk0SllZjK5jUkR6YzEdpxAKC9g-YbBA_jtOrM';
+
+        const { createClient } = supabase;
+        const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+            auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+        });
+
+        // ==================== STATE ====================
+        let currentUser = null;
+        let currentProfile = null; // { role, is_approved }
+        let cases = [];
+        let allUsers = []; // admin only
+
+        // DOM elements
+        const authPagesDiv = document.getElementById('auth-pages');
+        const appPagesDiv = document.getElementById('app-pages');
+        const sidebar = document.getElementById('sidebar');
+        const mobileHeader = document.getElementById('mobile-header');
+        const mobileSidebar = document.getElementById('mobile-sidebar');
+        const userInitials = document.getElementById('user-initials');
+        const userEmailSpan = document.getElementById('user-email');
+        const adminLinksDiv = document.getElementById('admin-links');
+        const mobileAdminLinks = document.getElementById('mobile-admin-links');
+
+        // Modal
+        const modal = document.getElementById('clientModal');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const cancelEditBtn = document.getElementById('cancelEditBtn');
+        const editForm = document.getElementById('edit-client-form');
+
+        // ==================== HELPERS ====================
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(pageId)?.classList.add('active');
+        }
+
+        function showAuth() {
+            authPagesDiv.classList.remove('hidden');
+            appPagesDiv.classList.add('hidden');
+            sidebar.classList.add('hidden');
+            mobileHeader.classList.add('hidden');
+            mobileSidebar.classList.add('-translate-x-full');
+        }
+
+        function showApp() {
+            authPagesDiv.classList.add('hidden');
+            appPagesDiv.classList.remove('hidden');
+            sidebar.classList.remove('hidden');
+            mobileHeader.classList.remove('hidden');
+            if (currentUser) {
+                userEmailSpan.textContent = currentUser.email;
+                userInitials.textContent = currentUser.email.charAt(0).toUpperCase();
+            }
+        }
+
+        function clearAllStorage() {
+            localStorage.clear();
+            sessionStorage.clear();
+        }
+
+        function escapeHtml(unsafe) {
+            if (!unsafe) return '';
+            return unsafe.replace(/[&<>"']/g, m => {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                if (m === '"') return '&quot;';
+                if (m === "'") return '&#039;';
+                return m;
+            });
+        }
+
+        // ==================== FETCH PROFILE ====================
+        async function fetchProfile() {
+            if (!currentUser) return null;
+            const { data, error } = await supabaseClient
+                .from('profiles')
+                .select('role, is_approved')
+                .eq('id', currentUser.id)
+                .single();
+            if (error) {
+                console.error('Error fetching profile:', error);
+                return null;
+            }
+            currentProfile = data;
+            return data;
+        }
+
+        // ==================== AUTH STATE ====================
+        supabaseClient.auth.onAuthStateChange(async (event, session) => {
+            if (session) {
+                currentUser = session.user;
+                const profile = await fetchProfile();
+                if (!profile) {
+                    // fallback: maybe profile not created yet? try to wait.
+                    setTimeout(async () => {
+                        await fetchProfile();
+                        afterAuth();
+                    }, 1000);
+                } else {
+                    afterAuth();
+                }
+            } else {
+                currentUser = null;
+                currentProfile = null;
+                cases = [];
+                allUsers = [];
+                showAuth();
+                if (window.location.hash === '#signup') showPage('signup-page');
+                else if (window.location.hash === '#forgot-password') showPage('forgot-page');
+                else showPage('login-page');
+            }
+        });
+
+        async function afterAuth() {
+            if (!currentProfile) {
+                // profile missing? maybe sign out
+                await supabaseClient.auth.signOut();
+                return;
             }
 
-            function renderOldCases() {
-                const today = new Date().toISOString().split('T')[0];
-                const old = cases.filter(c => c.case_date < today || c.status === 'old');
-                const container = document.getElementById('old-cases-list');
-                container.innerHTML = old.length ? old.map(c => `
+            // Check if approved
+            if (!currentProfile.is_approved) {
+                alert('Your account is pending approval by an administrator. You cannot access the system yet.');
+                await supabaseClient.auth.signOut();
+                return;
+            }
+
+            // Show admin links if role = admin
+            if (currentProfile.role === 'admin') {
+                adminLinksDiv.classList.remove('hidden');
+                mobileAdminLinks.classList.remove('hidden');
+            } else {
+                adminLinksDiv.classList.add('hidden');
+                mobileAdminLinks.classList.add('hidden');
+            }
+
+            showApp();
+            await fetchCases();
+            if (currentProfile.role === 'admin') {
+                await fetchAllUsers();
+                await fetchAllCasesAdmin(); // for admin cases page
+            }
+            window.location.hash = '#dashboard';
+        }
+
+        // ==================== FETCH USER'S CASES ====================
+        async function fetchCases() {
+            if (!currentUser) return;
+            const { data, error } = await supabaseClient
+                .from('cases')
+                .select('*')
+                .order('case_date', { ascending: true });
+            if (error) {
+                console.error('Error fetching cases:', error.message);
+                return;
+            }
+            cases = data || [];
+            renderCurrentPage();
+        }
+
+        // ==================== ADMIN FUNCTIONS ====================
+        async function fetchAllUsers() {
+            const { data, error } = await supabaseClient.rpc('admin_get_all_users');
+            if (error) {
+                console.error('Error fetching users:', error);
+                return;
+            }
+            allUsers = data || [];
+            renderUsersList();
+        }
+
+        async function fetchAllCasesAdmin() {
+            const { data, error } = await supabaseClient.rpc('admin_get_all_cases');
+            if (error) {
+                console.error('Error fetching all cases:', error);
+                return;
+            }
+            renderAdminCases(data || []);
+        }
+
+        function renderUsersList() {
+            const container = document.getElementById('users-list');
+            if (!container) return;
+            container.innerHTML = allUsers.map(u => `
+                <div class="bg-white p-4 rounded-lg shadow-sm flex flex-wrap items-center justify-between gap-4">
+                    <div>
+                        <p class="font-semibold">${escapeHtml(u.email)}</p>
+                        <p class="text-sm text-gray-500">Role: ${u.role} | Approved: ${u.is_approved ? '✅' : '❌'} | Last login: ${u.last_sign_in_at ? new Date(u.last_sign_in_at).toLocaleString() : 'never'}</p>
+                    </div>
+                    <div class="flex gap-2">
+                        ${!u.is_approved ? `<button class="approve-btn bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600" data-id="${u.id}">Approve</button>` : ''}
+                        <select class="role-select border rounded px-2 py-1" data-id="${u.id}">
+                            <option value="user" ${u.role === 'user' ? 'selected' : ''}>User</option>
+                            <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Admin</option>
+                        </select>
+                        <button class="delete-user-btn bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600" data-id="${u.id}">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+
+            // Attach event listeners
+            document.querySelectorAll('.approve-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const userId = e.target.dataset.id;
+                    await supabaseClient.rpc('admin_approve_user', { target_id: userId });
+                    await fetchAllUsers();
+                });
+            });
+            document.querySelectorAll('.role-select').forEach(select => {
+                select.addEventListener('change', async (e) => {
+                    const userId = e.target.dataset.id;
+                    const newRole = e.target.value;
+                    await supabaseClient.rpc('admin_change_role', { target_id: userId, new_role: newRole });
+                    await fetchAllUsers();
+                });
+            });
+            document.querySelectorAll('.delete-user-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    if (!confirm('Delete this user? All their cases will also be deleted.')) return;
+                    const userId = e.target.dataset.id;
+                    await supabaseClient.rpc('admin_delete_user', { target_id: userId });
+                    await fetchAllUsers();
+                });
+            });
+        }
+
+        function renderAdminCases(adminCases) {
+            const container = document.getElementById('admin-cases-list');
+            if (!container) return;
+            container.innerHTML = adminCases.length ? adminCases.map(c => `
+                <div class="bg-white p-4 rounded-lg shadow-sm border">
+                    <h3 class="font-bold">${escapeHtml(c.title)}</h3>
+                    <p class="text-sm text-gray-600">${escapeHtml(c.client_name || 'No client')}</p>
+                    <p class="text-xs text-gray-400">User ID: ${c.user_id}</p>
+                    <p class="text-xs text-gray-400">Date: ${c.case_date}</p>
+                </div>
+            `).join('') : '<p class="text-gray-400">No cases found.</p>';
+        }
+
+        // ==================== RENDER CURRENT PAGE ====================
+        function renderCurrentPage() {
+            if (!currentUser || !currentProfile) return;
+            const hash = window.location.hash.slice(1) || 'dashboard';
+            showPage(hash + '-page');
+
+            if (hash === 'dashboard') renderDashboard();
+            else if (hash === 'cases') renderAllCases();
+            else if (hash === 'old-cases') renderOldCases();
+            else if (hash === 'admin-users' && currentProfile.role === 'admin') fetchAllUsers();
+            else if (hash === 'admin-cases' && currentProfile.role === 'admin') fetchAllCasesAdmin();
+        }
+
+        function renderDashboard() { /* same as before, uses cases array */ 
+            const today = new Date().toISOString().split('T')[0];
+            const upcoming = cases.filter(c => c.case_date >= today && c.status !== 'old');
+            const old = cases.filter(c => c.case_date < today || c.status === 'old');
+            const uniqueClients = new Set(cases.map(c => c.client_name).filter(Boolean)).size;
+
+            document.getElementById('upcoming-count').textContent = upcoming.length;
+            document.getElementById('old-count').textContent = old.length;
+            document.getElementById('client-count').textContent = uniqueClients;
+
+            const upcomingDiv = document.getElementById('upcoming-list');
+            upcomingDiv.innerHTML = upcoming.length ? upcoming.map(c => {
+                const daysLeft = Math.ceil((new Date(c.case_date) - new Date()) / (1000*60*60*24));
+                return `
+                    <div class="case-card bg-white p-5 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition" data-id="${c.id}">
+                        <h3 class="font-bold text-lg text-gray-800">${escapeHtml(c.title)}</h3>
+                        <p class="text-sm text-gray-500 mt-1">${escapeHtml(c.client_name || 'No client')}</p>
+                        <p class="text-xs text-gray-400">${escapeHtml(c.nationality || '')} ${c.id_number ? '· ID: '+escapeHtml(c.id_number) : ''}</p>
+                        <div class="flex justify-between items-center mt-3">
+                            <span class="text-indigo-600 font-semibold">${daysLeft} day${daysLeft!==1?'s':''} left</span>
+                            <span class="text-sm bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full">${c.case_date}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('') : '<p class="text-gray-400 col-span-2">No upcoming cases.</p>';
+
+            const recentOldDiv = document.getElementById('recent-old-list');
+            const recentOld = old.slice(0,4);
+            recentOldDiv.innerHTML = recentOld.length ? recentOld.map(c => `
+                <div class="case-card bg-white p-5 rounded-xl shadow-sm border border-gray-100" data-id="${c.id}">
+                    <h3 class="font-bold text-gray-800">${escapeHtml(c.title)}</h3>
+                    <p class="text-sm text-gray-500">${escapeHtml(c.client_name || 'No client')} · ${c.case_date}</p>
+                    <p class="text-xs text-gray-400">${escapeHtml(c.nationality || '')} ${c.id_number ? '· ID: '+escapeHtml(c.id_number) : ''}</p>
+                </div>
+            `).join('') : '<p class="text-gray-400 col-span-2">No old cases.</p>';
+        }
+
+        function renderAllCases() { /* same */
+            const container = document.getElementById('all-cases-list');
+            container.innerHTML = cases.length ? cases.map(c => {
+                const badge = c.case_date >= new Date().toISOString().split('T')[0] && c.status !== 'old' 
+                    ? '<span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Upcoming</span>'
+                    : '<span class="bg-gray-200 text-gray-700 text-xs px-2 py-1 rounded-full">Old</span>';
+                return `
                     <div class="case-card bg-white p-5 rounded-xl shadow-sm border" data-id="${c.id}">
-                        <h3 class="font-bold text-gray-800">${escapeHtml(c.title)}</h3>
-                        <p class="text-sm text-gray-600">${escapeHtml(c.client_name || 'No client')}</p>
+                        <div class="flex justify-between items-start">
+                            <h3 class="font-bold text-gray-800">${escapeHtml(c.title)}</h3>
+                            ${badge}
+                        </div>
+                        <p class="text-sm text-gray-600 mt-1">${escapeHtml(c.client_name || 'No client')}</p>
                         <p class="text-xs text-gray-400">${escapeHtml(c.nationality || '')} ${c.id_number ? '· ID: '+escapeHtml(c.id_number) : ''}</p>
                         <p class="text-xs text-gray-400 mt-2">${c.case_date}</p>
                     </div>
-                `).join('') : '<p class="text-gray-400">No old cases.</p>';
+                `;
+            }).join('') : '<p class="text-gray-400">No cases yet. Add one!</p>';
+        }
+
+        function renderOldCases() { /* same */
+            const today = new Date().toISOString().split('T')[0];
+            const old = cases.filter(c => c.case_date < today || c.status === 'old');
+            const container = document.getElementById('old-cases-list');
+            container.innerHTML = old.length ? old.map(c => `
+                <div class="case-card bg-white p-5 rounded-xl shadow-sm border" data-id="${c.id}">
+                    <h3 class="font-bold text-gray-800">${escapeHtml(c.title)}</h3>
+                    <p class="text-sm text-gray-600">${escapeHtml(c.client_name || 'No client')}</p>
+                    <p class="text-xs text-gray-400">${escapeHtml(c.nationality || '')} ${c.id_number ? '· ID: '+escapeHtml(c.id_number) : ''}</p>
+                    <p class="text-xs text-gray-400 mt-2">${c.case_date}</p>
+                </div>
+            `).join('') : '<p class="text-gray-400">No old cases.</p>';
+        }
+
+        // ==================== MODAL ====================
+        function openModal(caseId) {
+            const caseData = cases.find(c => c.id == caseId);
+            if (!caseData) return;
+
+            document.getElementById('edit-case-id').value = caseData.id;
+            document.getElementById('edit-title').value = caseData.title || '';
+            document.getElementById('edit-desc').value = caseData.description || '';
+            document.getElementById('edit-date').value = caseData.case_date || '';
+            document.getElementById('edit-status').value = caseData.status || 'upcoming';
+            document.getElementById('edit-client-name').value = caseData.client_name || '';
+            document.getElementById('edit-client-contact').value = caseData.client_contact || '';
+            document.getElementById('edit-nationality').value = caseData.nationality || '';
+            document.getElementById('edit-id').value = caseData.id_number || '';
+
+            modal.classList.add('show');
+        }
+
+        function closeModal() {
+            modal.classList.remove('show');
+        }
+
+        document.addEventListener('click', (e) => {
+            const card = e.target.closest('.case-card');
+            if (card && card.dataset.id) {
+                openModal(card.dataset.id);
             }
+        });
 
-            // ==================== MODAL FUNCTIONS ====================
-            function openModal(caseId) {
-                const caseData = cases.find(c => c.id == caseId);
-                if (!caseData) return;
+        closeModalBtn.addEventListener('click', closeModal);
+        cancelEditBtn.addEventListener('click', closeModal);
 
-                document.getElementById('edit-case-id').value = caseData.id;
-                document.getElementById('edit-title').value = caseData.title || '';
-                document.getElementById('edit-desc').value = caseData.description || '';
-                document.getElementById('edit-date').value = caseData.case_date || '';
-                document.getElementById('edit-status').value = caseData.status || 'upcoming';
-                document.getElementById('edit-client-name').value = caseData.client_name || '';
-                document.getElementById('edit-client-contact').value = caseData.client_contact || '';
-                document.getElementById('edit-nationality').value = caseData.nationality || '';
-                document.getElementById('edit-id').value = caseData.id_number || '';
+        editForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('edit-case-id').value;
+            const updates = {
+                title: document.getElementById('edit-title').value,
+                description: document.getElementById('edit-desc').value,
+                case_date: document.getElementById('edit-date').value,
+                status: document.getElementById('edit-status').value,
+                client_name: document.getElementById('edit-client-name').value,
+                client_contact: document.getElementById('edit-client-contact').value,
+                nationality: document.getElementById('edit-nationality').value,
+                id_number: document.getElementById('edit-id').value,
+            };
 
-                modal.classList.add('show');
+            const { error } = await supabaseClient
+                .from('cases')
+                .update(updates)
+                .eq('id', id);
+
+            if (error) {
+                alert('Error updating: ' + error.message);
+            } else {
+                closeModal();
+                fetchCases();
             }
+        });
 
-            function closeModal() {
-                modal.classList.remove('show');
+        // ==================== AUTH FORMS ====================
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = e.target.email.value.trim();
+            const password = e.target.password.value;
+            const errorDiv = document.getElementById('login-error');
+            errorDiv.textContent = '';
+
+            const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+            if (error) errorDiv.textContent = error.message;
+        });
+
+        document.getElementById('signup-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = e.target.email.value.trim();
+            const password = e.target.password.value;
+            const msgDiv = document.getElementById('signup-message');
+            msgDiv.innerHTML = '';
+
+            const { error } = await supabaseClient.auth.signUp({ email, password });
+            if (error) {
+                msgDiv.innerHTML = `<span class="text-red-500">${error.message}</span>`;
+            } else {
+                msgDiv.innerHTML = `<span class="text-green-600">Confirmation email sent! Please check your inbox. Your account must be approved by an admin.</span>`;
+                e.target.reset();
             }
+        });
 
-            // ==================== EVENT LISTENERS ====================
-            // Click on case cards (delegation)
-            document.addEventListener('click', (e) => {
-                const card = e.target.closest('.case-card');
-                if (card && card.dataset.id) {
-                    openModal(card.dataset.id);
-                }
+        document.getElementById('forgot-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = e.target.email.value.trim();
+            const msgDiv = document.getElementById('forgot-message');
+            msgDiv.innerHTML = '';
+
+            const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+                redirectTo: window.location.origin + '/#login',
             });
+            if (error) {
+                msgDiv.innerHTML = `<span class="text-red-500">${error.message}</span>`;
+            } else {
+                msgDiv.innerHTML = `<span class="text-green-600">Password reset email sent. Check your inbox.</span>`;
+                e.target.reset();
+            }
+        });
 
-            closeModalBtn.addEventListener('click', closeModal);
-            cancelEditBtn.addEventListener('click', closeModal);
+        // ==================== LOGOUT & DELETE ACCOUNT ====================
+        async function logout() {
+            await supabaseClient.auth.signOut();
+            clearAllStorage();
+        }
+        document.getElementById('logoutBtn').addEventListener('click', logout);
+        document.getElementById('mobileLogout').addEventListener('click', logout);
 
-            // Save edited case
-            editForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const id = document.getElementById('edit-case-id').value;
-                const updates = {
-                    title: document.getElementById('edit-title').value,
-                    description: document.getElementById('edit-desc').value,
-                    case_date: document.getElementById('edit-date').value,
-                    status: document.getElementById('edit-status').value,
-                    client_name: document.getElementById('edit-client-name').value,
-                    client_contact: document.getElementById('edit-client-contact').value,
-                    nationality: document.getElementById('edit-nationality').value,
-                    id_number: document.getElementById('edit-id').value,
-                };
-
-                const { error } = await supabaseClient
-                    .from('cases')
-                    .update(updates)
-                    .eq('id', id);
-
-                if (error) {
-                    alert('Error updating: ' + error.message);
-                } else {
-                    closeModal();
-                    fetchCases(); // refresh
-                }
-            });
-
-            // Login form
-            document.getElementById('login-form').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const email = e.target.email.value.trim();
-                const password = e.target.password.value;
-                const errorDiv = document.getElementById('login-error');
-                errorDiv.textContent = '';
-
-                const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-                if (error) errorDiv.textContent = error.message;
-            });
-
-            // Signup form
-            document.getElementById('signup-form').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const email = e.target.email.value.trim();
-                const password = e.target.password.value;
-                const msgDiv = document.getElementById('signup-message');
-                msgDiv.innerHTML = '';
-
-                const { error } = await supabaseClient.auth.signUp({ email, password });
-                if (error) {
-                    msgDiv.innerHTML = `<span class="text-red-500">${error.message}</span>`;
-                } else {
-                    msgDiv.innerHTML = `<span class="text-green-600">Confirmation email sent! Check your inbox.</span>`;
-                    e.target.reset();
-                }
-            });
-
-            // Logout
-            async function logout() {
+        async function deleteAccount() {
+            if (!confirm('Are you sure? This will permanently delete your account and ALL cases. This action cannot be undone.')) return;
+            const { error } = await supabaseClient.rpc('delete_my_account'); // we need this function too
+            if (error) {
+                alert('Error deleting account: ' + error.message);
+            } else {
                 await supabaseClient.auth.signOut();
                 clearAllStorage();
+                window.location.reload();
             }
-            document.getElementById('logoutBtn').addEventListener('click', logout);
-            document.getElementById('mobileLogout').addEventListener('click', logout);
+        }
+        document.getElementById('deleteAccountBtn').addEventListener('click', deleteAccount);
+        document.getElementById('mobileDeleteAccount').addEventListener('click', deleteAccount);
 
-            // Add case form (with new fields)
-            document.getElementById('add-case-form').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                if (!currentUser) return;
+        // ==================== ADD CASE ====================
+        document.getElementById('add-case-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!currentUser) return;
 
-                const title = document.getElementById('case-title').value.trim();
-                const description = document.getElementById('case-desc').value.trim();
-                const case_date = document.getElementById('case-date').value;
-                const status = document.getElementById('case-status').value;
-                const client_name = document.getElementById('client-name').value.trim();
-                const client_contact = document.getElementById('client-contact').value.trim();
-                const nationality = document.getElementById('client-nationality').value.trim();
-                const id_number = document.getElementById('client-id').value.trim();
+            const title = document.getElementById('case-title').value.trim();
+            const description = document.getElementById('case-desc').value.trim();
+            const case_date = document.getElementById('case-date').value;
+            const status = document.getElementById('case-status').value;
+            const client_name = document.getElementById('client-name').value.trim();
+            const client_contact = document.getElementById('client-contact').value.trim();
+            const nationality = document.getElementById('client-nationality').value.trim();
+            const id_number = document.getElementById('client-id').value.trim();
 
-                if (!title || !case_date) {
-                    document.getElementById('case-form-message').innerHTML = '<span class="text-red-500">Title and date are required.</span>';
-                    return;
-                }
+            if (!title || !case_date) {
+                document.getElementById('case-form-message').innerHTML = '<span class="text-red-500">Title and date are required.</span>';
+                return;
+            }
 
-                const { error } = await supabaseClient.from('cases').insert({
-                    user_id: currentUser.id,
-                    title,
-                    description,
-                    case_date,
-                    status,
-                    client_name: client_name || null,
-                    client_contact: client_contact || null,
-                    nationality: nationality || null,
-                    id_number: id_number || null
-                });
-
-                if (error) {
-                    document.getElementById('case-form-message').innerHTML = `<span class="text-red-500">${error.message}</span>`;
-                } else {
-                    document.getElementById('case-form-message').innerHTML = '<span class="text-green-600">Case added successfully!</span>';
-                    e.target.reset();
-                    fetchCases();
-                    window.location.hash = '#cases';
-                }
+            const { error } = await supabaseClient.from('cases').insert({
+                user_id: currentUser.id,
+                title,
+                description,
+                case_date,
+                status,
+                client_name: client_name || null,
+                client_contact: client_contact || null,
+                nationality: nationality || null,
+                id_number: id_number || null
             });
 
-            // Mobile menu
-            document.getElementById('mobileMenuBtn')?.addEventListener('click', () => {
-                mobileSidebar.classList.remove('-translate-x-full');
+            if (error) {
+                document.getElementById('case-form-message').innerHTML = `<span class="text-red-500">${error.message}</span>`;
+            } else {
+                document.getElementById('case-form-message').innerHTML = '<span class="text-green-600">Case added successfully!</span>';
+                e.target.reset();
+                fetchCases();
+                window.location.hash = '#cases';
+            }
+        });
+
+        // ==================== ADMIN ADD USER ====================
+        document.getElementById('admin-add-user-form')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('new-user-email').value.trim();
+            const password = document.getElementById('new-user-password').value;
+            const role = document.getElementById('new-user-role').value;
+            const approved = document.getElementById('new-user-approved').checked;
+            const msgDiv = document.getElementById('admin-add-message');
+
+            const { data, error } = await supabaseClient.rpc('admin_create_user', {
+                user_email: email,
+                user_password: password,
+                user_role: role,
+                approved: approved
             });
-            document.getElementById('closeMobileMenu')?.addEventListener('click', () => {
+
+            if (error) {
+                msgDiv.innerHTML = `<span class="text-red-500">${error.message}</span>`;
+            } else {
+                msgDiv.innerHTML = `<span class="text-green-600">User created successfully. ID: ${data}</span>`;
+                e.target.reset();
+                await fetchAllUsers();
+            }
+        });
+
+        // ==================== MOBILE MENU ====================
+        document.getElementById('mobileMenuBtn')?.addEventListener('click', () => {
+            mobileSidebar.classList.remove('-translate-x-full');
+        });
+        document.getElementById('closeMobileMenu')?.addEventListener('click', () => {
+            mobileSidebar.classList.add('-translate-x-full');
+        });
+        document.querySelectorAll('.sidebar-link-mobile').forEach(link => {
+            link.addEventListener('click', () => {
                 mobileSidebar.classList.add('-translate-x-full');
             });
-            document.querySelectorAll('.sidebar-link-mobile').forEach(link => {
-                link.addEventListener('click', () => {
-                    mobileSidebar.classList.add('-translate-x-full');
-                });
-            });
+        });
 
-            // Disable autocomplete everywhere
-            document.querySelectorAll('input, textarea').forEach(el => el.setAttribute('autocomplete', 'off'));
-
-            // Initial load
-            window.addEventListener('load', async () => {
-                const { data: { session } } = await supabaseClient.auth.getSession();
-                if (session) {
-                    currentUser = session.user;
-                    showApp();
-                    fetchCases();
-                } else {
-                    showAuth();
-                    showPage('login-page');
+        // ==================== INIT ====================
+        window.addEventListener('load', async () => {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session) {
+                currentUser = session.user;
+                const profile = await fetchProfile();
+                if (profile) afterAuth();
+                else {
+                    // wait a bit and retry
+                    setTimeout(async () => {
+                        await fetchProfile();
+                        if (currentProfile) afterAuth();
+                        else await supabaseClient.auth.signOut();
+                    }, 1500);
                 }
-                window.addEventListener('hashchange', () => {
-                    if (currentUser) renderCurrentPage();
-                    else {
-                        const hash = window.location.hash;
-                        if (hash === '#signup') showPage('signup-page');
-                        else showPage('login-page');
-                    }
-                });
+            } else {
+                showAuth();
+                showPage('login-page');
+            }
+
+            window.addEventListener('hashchange', () => {
+                if (currentUser && currentProfile) {
+                    renderCurrentPage();
+                } else {
+                    const hash = window.location.hash;
+                    if (hash === '#signup') showPage('signup-page');
+                    else if (hash === '#forgot-password') showPage('forgot-page');
+                    else showPage('login-page');
+                }
             });
-        })();
-    </script>
+        });
+
+        // Disable autofill
+        document.querySelectorAll('input, textarea').forEach(el => el.setAttribute('autocomplete', 'off'));
+    })();
+</script>
 </body>
 </html>
