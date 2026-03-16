@@ -8,21 +8,25 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        /* Hide autofill background color */
         input:-webkit-autofill,
         input:-webkit-autofill:focus {
             transition: background-color 600000s 0s, color 600000s 0s;
         }
-        /* Smooth page transitions */
         .page { display: none; }
         .page.active { display: block; }
+        /* Modal */
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 100; }
+        .modal.show { display: flex; }
+        .modal-content { max-width: 500px; width: 90%; max-height: 90vh; overflow-y: auto; }
+        .case-card { cursor: pointer; transition: all 0.1s; }
+        .case-card:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body class="bg-gray-50 font-sans antialiased">
 
     <!-- Main container -->
     <div id="app" class="min-h-screen flex flex-col md:flex-row">
-        <!-- Sidebar – shown only when logged in -->
+        <!-- Sidebar (same) -->
         <aside id="sidebar" class="hidden md:flex md:w-64 bg-indigo-800 text-white p-6 flex-col shadow-xl">
             <h2 class="text-2xl font-bold mb-8"><i class="fas fa-gavel mr-2"></i>LegalCase</h2>
             <nav class="space-y-3 flex-1">
@@ -40,15 +44,15 @@
             </div>
         </aside>
 
-        <!-- Mobile header + menu (simplified) -->
+        <!-- Mobile header -->
         <div id="mobile-header" class="md:hidden bg-indigo-800 text-white p-4 flex justify-between items-center hidden">
             <span class="font-bold text-xl">LegalCase</span>
             <button id="mobileMenuBtn" class="focus:outline-none"><i class="fas fa-bars text-2xl"></i></button>
         </div>
 
-        <!-- Main content area -->
+        <!-- Main content -->
         <main class="flex-1 p-4 md:p-8 overflow-auto bg-gray-50" id="main-content">
-            <!-- AUTH PAGES (login & signup) -->
+            <!-- AUTH PAGES (unchanged) -->
             <div id="auth-pages">
                 <!-- Login page -->
                 <div id="login-page" class="page active max-w-md mx-auto mt-10 md:mt-20">
@@ -71,7 +75,7 @@
                     </div>
                 </div>
 
-                <!-- Signup page -->
+                <!-- Signup page (unchanged) -->
                 <div id="signup-page" class="page max-w-md mx-auto mt-10 md:mt-20">
                     <div class="bg-white p-8 rounded-2xl shadow-xl border border-gray-100">
                         <h2 class="text-3xl font-bold text-gray-800 mb-2">Create account</h2>
@@ -95,7 +99,7 @@
 
             <!-- APP PAGES (protected) -->
             <div id="app-pages" class="hidden">
-                <!-- Dashboard (upcoming & recent old) -->
+                <!-- Dashboard (same layout, but we'll show more info later) -->
                 <div id="dashboard-page" class="page">
                     <h1 class="text-3xl font-bold text-gray-800 mb-2">Dashboard</h1>
                     <p class="text-gray-500 mb-8">Overview of your cases</p>
@@ -122,13 +126,13 @@
                     <div id="recent-old-list" class="grid md:grid-cols-2 gap-4"></div>
                 </div>
 
-                <!-- All Cases (upcoming + old combined) -->
+                <!-- All Cases -->
                 <div id="cases-page" class="page">
                     <h1 class="text-3xl font-bold text-gray-800 mb-6">All Cases</h1>
                     <div id="all-cases-list" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
                 </div>
 
-                <!-- Add new case -->
+                <!-- Add new case (with extra fields) -->
                 <div id="add-case-page" class="page max-w-2xl mx-auto">
                     <h1 class="text-3xl font-bold text-gray-800 mb-6">Schedule a new case</h1>
                     <div class="bg-white p-6 rounded-xl shadow-md">
@@ -154,7 +158,7 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="grid md:grid-cols-2 gap-4 mb-6">
+                            <div class="grid md:grid-cols-2 gap-4 mb-4">
                                 <div>
                                     <label class="block text-gray-700 font-semibold mb-2">Client name</label>
                                     <input type="text" id="client-name" class="w-full px-4 py-2 border rounded-lg" autocomplete="off">
@@ -162,6 +166,17 @@
                                 <div>
                                     <label class="block text-gray-700 font-semibold mb-2">Client contact</label>
                                     <input type="text" id="client-contact" class="w-full px-4 py-2 border rounded-lg" autocomplete="off">
+                                </div>
+                            </div>
+                            <!-- NEW FIELDS: Nationality and ID Number -->
+                            <div class="grid md:grid-cols-2 gap-4 mb-6">
+                                <div>
+                                    <label class="block text-gray-700 font-semibold mb-2">Nationality</label>
+                                    <input type="text" id="client-nationality" class="w-full px-4 py-2 border rounded-lg" autocomplete="off">
+                                </div>
+                                <div>
+                                    <label class="block text-gray-700 font-semibold mb-2">ID Number</label>
+                                    <input type="text" id="client-id" class="w-full px-4 py-2 border rounded-lg" autocomplete="off">
                                 </div>
                             </div>
                             <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-lg transition">Create case</button>
@@ -179,7 +194,7 @@
         </main>
     </div>
 
-    <!-- Hidden mobile menu (simplified) -->
+    <!-- Mobile sidebar (same) -->
     <div id="mobile-sidebar" class="fixed inset-0 bg-indigo-900 text-white p-6 transform -translate-x-full transition-transform duration-300 md:hidden z-50">
         <button id="closeMobileMenu" class="absolute top-4 right-4 text-2xl"><i class="fas fa-times"></i></button>
         <nav class="mt-12 space-y-4">
@@ -192,44 +207,102 @@
         </nav>
     </div>
 
+    <!-- MODAL for viewing/editing client details -->
+    <div id="clientModal" class="modal">
+        <div class="modal-content bg-white rounded-2xl shadow-2xl p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-2xl font-bold text-gray-800">Client Details</h3>
+                <button id="closeModalBtn" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+            </div>
+            <form id="edit-client-form" autocomplete="off">
+                <input type="hidden" id="edit-case-id">
+                
+                <div class="mb-3">
+                    <label class="block text-gray-700 font-semibold mb-1">Case Title</label>
+                    <input type="text" id="edit-title" class="w-full px-4 py-2 border rounded-lg bg-gray-100" readonly>
+                </div>
+                <div class="mb-3">
+                    <label class="block text-gray-700 font-semibold mb-1">Description</label>
+                    <textarea id="edit-desc" rows="2" class="w-full px-4 py-2 border rounded-lg"></textarea>
+                </div>
+                <div class="grid grid-cols-2 gap-3 mb-3">
+                    <div>
+                        <label class="block text-gray-700 font-semibold mb-1">Case Date</label>
+                        <input type="date" id="edit-date" class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 font-semibold mb-1">Status</label>
+                        <select id="edit-status" class="w-full px-4 py-2 border rounded-lg bg-white">
+                            <option value="upcoming">Upcoming</option>
+                            <option value="old">Old / Closed</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3 mb-3">
+                    <div>
+                        <label class="block text-gray-700 font-semibold mb-1">Client Name</label>
+                        <input type="text" id="edit-client-name" class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 font-semibold mb-1">Contact</label>
+                        <input type="text" id="edit-client-contact" class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                </div>
+                <!-- NEW fields in modal -->
+                <div class="grid grid-cols-2 gap-3 mb-4">
+                    <div>
+                        <label class="block text-gray-700 font-semibold mb-1">Nationality</label>
+                        <input type="text" id="edit-nationality" class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 font-semibold mb-1">ID Number</label>
+                        <input type="text" id="edit-id" class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-3">
+                    <button type="button" id="cancelEditBtn" class="px-4 py-2 border rounded-lg text-gray-700 hover:bg-gray-100">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
         (function() {
-            // ==================== CONFIGURATION ====================
-            // Replace with your own Supabase URL and anon key (from project settings)
+            // ==================== CONFIG ====================
             const SUPABASE_URL = 'https://indrwmklaohnnoebbtef.supabase.co';
             const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImluZHJ3bWtsYW9obm5vZWJidGVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMxNjU1MTUsImV4cCI6MjA4ODc0MTUxNX0.AFQvyeQnTUTwHeIoc9gusfieJ_HpYRmyv_8fa-Xal1I';
 
-            // ==================== SUPABASE INIT ====================
             const { createClient } = supabase;
             const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-                auth: {
-                    persistSession: false,          // Session only in memory – never stored on disk
-                    autoRefreshToken: true,
-                    detectSessionInUrl: true         // Handles email confirmation redirect
-                }
+                auth: { persistSession: false, autoRefreshToken: true, detectSessionInUrl: true }
             });
 
-            // ==================== GLOBAL STATE ====================
+            // ==================== STATE ====================
             let currentUser = null;
-            let cases = [];                           // In-memory cache, never persisted
+            let cases = [];
 
             // DOM elements
             const authPagesDiv = document.getElementById('auth-pages');
             const appPagesDiv = document.getElementById('app-pages');
             const sidebar = document.getElementById('sidebar');
             const mobileHeader = document.getElementById('mobile-header');
-            const mainContent = document.getElementById('main-content');
             const mobileSidebar = document.getElementById('mobile-sidebar');
             const userInitials = document.getElementById('user-initials');
             const userEmailSpan = document.getElementById('user-email');
 
-            // ==================== HELPER FUNCTIONS ====================
+            // Modal elements
+            const modal = document.getElementById('clientModal');
+            const closeModalBtn = document.getElementById('closeModalBtn');
+            const cancelEditBtn = document.getElementById('cancelEditBtn');
+            const editForm = document.getElementById('edit-client-form');
+
+            // ==================== HELPERS ====================
             function showPage(pageId) {
                 document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-                const page = document.getElementById(pageId);
-                if (page) page.classList.add('active');
+                document.getElementById(pageId)?.classList.add('active');
             }
 
             function showAuth() {
@@ -237,7 +310,6 @@
                 appPagesDiv.classList.add('hidden');
                 sidebar.classList.add('hidden');
                 mobileHeader.classList.add('hidden');
-                // hide mobile sidebar if open
                 mobileSidebar.classList.add('-translate-x-full');
             }
 
@@ -246,47 +318,47 @@
                 appPagesDiv.classList.remove('hidden');
                 sidebar.classList.remove('hidden');
                 mobileHeader.classList.remove('hidden');
-                // update user info in sidebar
                 if (currentUser) {
                     userEmailSpan.textContent = currentUser.email;
                     userInitials.textContent = currentUser.email.charAt(0).toUpperCase();
                 }
             }
 
-            // Clear all browser storage (called on logout)
             function clearAllStorage() {
                 localStorage.clear();
                 sessionStorage.clear();
-                // also clear any IndexedDB / cache if needed – but we don't use them
             }
 
-            // ==================== AUTH STATE LISTENER ====================
+            // Escape HTML
+            function escapeHtml(unsafe) {
+                if (!unsafe) return '';
+                return unsafe.replace(/[&<>"']/g, m => {
+                    if(m === '&') return '&amp;'; if(m === '<') return '&lt;'; if(m === '>') return '&gt;';
+                    if(m === '"') return '&quot;'; if(m === "'") return '&#039;';
+                    return m;
+                });
+            }
+
+            // ==================== AUTH ====================
             supabaseClient.auth.onAuthStateChange((event, session) => {
                 if (session) {
                     currentUser = session.user;
                     showApp();
-                    // Load cases from DB
                     fetchCases();
-                    // navigate to dashboard by default
                     window.location.hash = '#dashboard';
                 } else {
                     currentUser = null;
                     cases = [];
                     showAuth();
-                    // show login page by default (but respect hash)
-                    if (window.location.hash === '#signup') {
-                        showPage('signup-page');
-                    } else {
-                        showPage('login-page');
-                    }
-                    // clear any hash that requires auth
+                    if (window.location.hash === '#signup') showPage('signup-page');
+                    else showPage('login-page');
                     if (window.location.hash && !['#login', '#signup'].includes(window.location.hash)) {
                         window.location.hash = '#login';
                     }
                 }
             });
 
-            // ==================== FETCH CASES (RLS enforced) ====================
+            // ==================== FETCH CASES ====================
             async function fetchCases() {
                 if (!currentUser) return;
                 const { data, error } = await supabaseClient
@@ -301,25 +373,17 @@
                 renderCurrentPage();
             }
 
-            // ==================== RENDER BASED ON HASH ====================
+            // ==================== RENDER ====================
             function renderCurrentPage() {
                 if (!currentUser) return;
-
                 const hash = window.location.hash.slice(1) || 'dashboard';
                 showPage(hash + '-page');
 
-                // Render appropriate view
-                if (hash === 'dashboard') {
-                    renderDashboard();
-                } else if (hash === 'cases') {
-                    renderAllCases();
-                } else if (hash === 'old-cases') {
-                    renderOldCases();
-                }
-                // add-case page does not need rendering (form)
+                if (hash === 'dashboard') renderDashboard();
+                else if (hash === 'cases') renderAllCases();
+                else if (hash === 'old-cases') renderOldCases();
             }
 
-            // --- Dashboard rendering ---
             function renderDashboard() {
                 const today = new Date().toISOString().split('T')[0];
                 const upcoming = cases.filter(c => c.case_date >= today && c.status !== 'old');
@@ -330,14 +394,14 @@
                 document.getElementById('old-count').textContent = old.length;
                 document.getElementById('client-count').textContent = uniqueClients;
 
-                // Upcoming list with countdown
                 const upcomingDiv = document.getElementById('upcoming-list');
                 upcomingDiv.innerHTML = upcoming.length ? upcoming.map(c => {
                     const daysLeft = Math.ceil((new Date(c.case_date) - new Date()) / (1000*60*60*24));
                     return `
-                        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition">
+                        <div class="case-card bg-white p-5 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition" data-id="${c.id}">
                             <h3 class="font-bold text-lg text-gray-800">${escapeHtml(c.title)}</h3>
                             <p class="text-sm text-gray-500 mt-1">${escapeHtml(c.client_name || 'No client')}</p>
+                            <p class="text-xs text-gray-400">${escapeHtml(c.nationality || '')} ${c.id_number ? '· ID: '+escapeHtml(c.id_number) : ''}</p>
                             <div class="flex justify-between items-center mt-3">
                                 <span class="text-indigo-600 font-semibold">${daysLeft} day${daysLeft!==1?'s':''} left</span>
                                 <span class="text-sm bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full">${c.case_date}</span>
@@ -346,18 +410,17 @@
                     `;
                 }).join('') : '<p class="text-gray-400 col-span-2">No upcoming cases.</p>';
 
-                // Recent old (last 4)
                 const recentOldDiv = document.getElementById('recent-old-list');
                 const recentOld = old.slice(0,4);
                 recentOldDiv.innerHTML = recentOld.length ? recentOld.map(c => `
-                    <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+                    <div class="case-card bg-white p-5 rounded-xl shadow-sm border border-gray-100" data-id="${c.id}">
                         <h3 class="font-bold text-gray-800">${escapeHtml(c.title)}</h3>
                         <p class="text-sm text-gray-500">${escapeHtml(c.client_name || 'No client')} · ${c.case_date}</p>
+                        <p class="text-xs text-gray-400">${escapeHtml(c.nationality || '')} ${c.id_number ? '· ID: '+escapeHtml(c.id_number) : ''}</p>
                     </div>
                 `).join('') : '<p class="text-gray-400 col-span-2">No old cases.</p>';
             }
 
-            // --- All cases (upcoming & old mixed) ---
             function renderAllCases() {
                 const container = document.getElementById('all-cases-list');
                 container.innerHTML = cases.length ? cases.map(c => {
@@ -365,65 +428,93 @@
                         ? '<span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Upcoming</span>'
                         : '<span class="bg-gray-200 text-gray-700 text-xs px-2 py-1 rounded-full">Old</span>';
                     return `
-                        <div class="bg-white p-5 rounded-xl shadow-sm border">
+                        <div class="case-card bg-white p-5 rounded-xl shadow-sm border" data-id="${c.id}">
                             <div class="flex justify-between items-start">
                                 <h3 class="font-bold text-gray-800">${escapeHtml(c.title)}</h3>
                                 ${badge}
                             </div>
                             <p class="text-sm text-gray-600 mt-1">${escapeHtml(c.client_name || 'No client')}</p>
+                            <p class="text-xs text-gray-400">${escapeHtml(c.nationality || '')} ${c.id_number ? '· ID: '+escapeHtml(c.id_number) : ''}</p>
                             <p class="text-xs text-gray-400 mt-2">${c.case_date}</p>
                         </div>
                     `;
                 }).join('') : '<p class="text-gray-400">No cases yet. Add one!</p>';
             }
 
-            // --- Old cases only ---
             function renderOldCases() {
                 const today = new Date().toISOString().split('T')[0];
                 const old = cases.filter(c => c.case_date < today || c.status === 'old');
                 const container = document.getElementById('old-cases-list');
                 container.innerHTML = old.length ? old.map(c => `
-                    <div class="bg-white p-5 rounded-xl shadow-sm border">
+                    <div class="case-card bg-white p-5 rounded-xl shadow-sm border" data-id="${c.id}">
                         <h3 class="font-bold text-gray-800">${escapeHtml(c.title)}</h3>
                         <p class="text-sm text-gray-600">${escapeHtml(c.client_name || 'No client')}</p>
+                        <p class="text-xs text-gray-400">${escapeHtml(c.nationality || '')} ${c.id_number ? '· ID: '+escapeHtml(c.id_number) : ''}</p>
                         <p class="text-xs text-gray-400 mt-2">${c.case_date}</p>
                     </div>
                 `).join('') : '<p class="text-gray-400">No old cases.</p>';
             }
 
-            // Simple escape (prevent XSS)
-            function escapeHtml(unsafe) {
-                if (!unsafe) return '';
-                return unsafe.replace(/[&<>"']/g, function(m) {
-                    if(m === '&') return '&amp;'; if(m === '<') return '&lt;'; if(m === '>') return '&gt;';
-                    if(m === '"') return '&quot;'; if(m === "'") return '&#039;';
-                    return m;
-                });
+            // ==================== MODAL FUNCTIONS ====================
+            function openModal(caseId) {
+                const caseData = cases.find(c => c.id == caseId);
+                if (!caseData) return;
+
+                document.getElementById('edit-case-id').value = caseData.id;
+                document.getElementById('edit-title').value = caseData.title || '';
+                document.getElementById('edit-desc').value = caseData.description || '';
+                document.getElementById('edit-date').value = caseData.case_date || '';
+                document.getElementById('edit-status').value = caseData.status || 'upcoming';
+                document.getElementById('edit-client-name').value = caseData.client_name || '';
+                document.getElementById('edit-client-contact').value = caseData.client_contact || '';
+                document.getElementById('edit-nationality').value = caseData.nationality || '';
+                document.getElementById('edit-id').value = caseData.id_number || '';
+
+                modal.classList.add('show');
+            }
+
+            function closeModal() {
+                modal.classList.remove('show');
             }
 
             // ==================== EVENT LISTENERS ====================
-            window.addEventListener('load', async () => {
-                // Check existing session (memory only, so likely null, but might be from redirect)
-                const { data: { session } } = await supabaseClient.auth.getSession();
-                if (session) {
-                    currentUser = session.user;
-                    showApp();
-                    fetchCases();
-                } else {
-                    showAuth();
-                    showPage('login-page');
+            // Click on case cards (delegation)
+            document.addEventListener('click', (e) => {
+                const card = e.target.closest('.case-card');
+                if (card && card.dataset.id) {
+                    openModal(card.dataset.id);
                 }
+            });
 
-                // Listen for hash changes
-                window.addEventListener('hashchange', () => {
-                    if (currentUser) {
-                        renderCurrentPage();
-                    } else {
-                        const hash = window.location.hash;
-                        if (hash === '#signup') showPage('signup-page');
-                        else showPage('login-page');
-                    }
-                });
+            closeModalBtn.addEventListener('click', closeModal);
+            cancelEditBtn.addEventListener('click', closeModal);
+
+            // Save edited case
+            editForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const id = document.getElementById('edit-case-id').value;
+                const updates = {
+                    title: document.getElementById('edit-title').value,
+                    description: document.getElementById('edit-desc').value,
+                    case_date: document.getElementById('edit-date').value,
+                    status: document.getElementById('edit-status').value,
+                    client_name: document.getElementById('edit-client-name').value,
+                    client_contact: document.getElementById('edit-client-contact').value,
+                    nationality: document.getElementById('edit-nationality').value,
+                    id_number: document.getElementById('edit-id').value,
+                };
+
+                const { error } = await supabaseClient
+                    .from('cases')
+                    .update(updates)
+                    .eq('id', id);
+
+                if (error) {
+                    alert('Error updating: ' + error.message);
+                } else {
+                    closeModal();
+                    fetchCases(); // refresh
+                }
             });
 
             // Login form
@@ -435,11 +526,7 @@
                 errorDiv.textContent = '';
 
                 const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-                if (error) {
-                    errorDiv.textContent = error.message;
-                } else {
-                    // session will trigger onAuthStateChange
-                }
+                if (error) errorDiv.textContent = error.message;
             });
 
             // Signup form
@@ -459,16 +546,15 @@
                 }
             });
 
-            // Logout (both desktop and mobile)
+            // Logout
             async function logout() {
                 await supabaseClient.auth.signOut();
-                clearAllStorage();               // nuke everything
-                // session change will trigger showAuth
+                clearAllStorage();
             }
             document.getElementById('logoutBtn').addEventListener('click', logout);
             document.getElementById('mobileLogout').addEventListener('click', logout);
 
-            // Add case form
+            // Add case form (with new fields)
             document.getElementById('add-case-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 if (!currentUser) return;
@@ -479,6 +565,8 @@
                 const status = document.getElementById('case-status').value;
                 const client_name = document.getElementById('client-name').value.trim();
                 const client_contact = document.getElementById('client-contact').value.trim();
+                const nationality = document.getElementById('client-nationality').value.trim();
+                const id_number = document.getElementById('client-id').value.trim();
 
                 if (!title || !case_date) {
                     document.getElementById('case-form-message').innerHTML = '<span class="text-red-500">Title and date are required.</span>';
@@ -492,7 +580,9 @@
                     case_date,
                     status,
                     client_name: client_name || null,
-                    client_contact: client_contact || null
+                    client_contact: client_contact || null,
+                    nationality: nationality || null,
+                    id_number: id_number || null
                 });
 
                 if (error) {
@@ -500,31 +590,48 @@
                 } else {
                     document.getElementById('case-form-message').innerHTML = '<span class="text-green-600">Case added successfully!</span>';
                     e.target.reset();
-                    fetchCases();                 // refresh list
+                    fetchCases();
                     window.location.hash = '#cases';
                 }
             });
 
-            // Mobile menu toggle
+            // Mobile menu
             document.getElementById('mobileMenuBtn')?.addEventListener('click', () => {
                 mobileSidebar.classList.remove('-translate-x-full');
             });
             document.getElementById('closeMobileMenu')?.addEventListener('click', () => {
                 mobileSidebar.classList.add('-translate-x-full');
             });
-            // Close mobile menu when clicking a link
             document.querySelectorAll('.sidebar-link-mobile').forEach(link => {
                 link.addEventListener('click', () => {
                     mobileSidebar.classList.add('-translate-x-full');
                 });
             });
 
-            // ==================== DISABLE AUTOCOMPLETE ON ALL INPUTS (extra measure) ====================
+            // Disable autocomplete everywhere
             document.querySelectorAll('input, textarea').forEach(el => el.setAttribute('autocomplete', 'off'));
+
+            // Initial load
+            window.addEventListener('load', async () => {
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                if (session) {
+                    currentUser = session.user;
+                    showApp();
+                    fetchCases();
+                } else {
+                    showAuth();
+                    showPage('login-page');
+                }
+                window.addEventListener('hashchange', () => {
+                    if (currentUser) renderCurrentPage();
+                    else {
+                        const hash = window.location.hash;
+                        if (hash === '#signup') showPage('signup-page');
+                        else showPage('login-page');
+                    }
+                });
+            });
         })();
     </script>
-
-    <!-- Initial hash handling -->
-    <noscript>JavaScript required.</noscript>
 </body>
 </html>
